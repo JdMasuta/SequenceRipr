@@ -19,6 +19,9 @@
 import re
 import neptyne as nt
 
+BOM = nt.sheets["BOMs"]
+SEQUENCE = nt.sheets["SEQUENCE"]
+
 # Main function to create a table structure for a project
 # It initializes a Project object, finds and adds items (Z) to it, and then adds sequences to each item
 def createTable():
@@ -32,10 +35,21 @@ def createTable():
     print("Completed. Running test...")
     #test()  # Run test function to print sequences
     print("Done!")
-    #if(!(nt.sheets["BOMs"])):
+    #if(!(BOM)):
     #    nt.sheets.new_sheet("BOMs")
     BOMs!A2 = "= project.printTable()"
-    return project.project_name, project.project_id
+    BOM[1,5] = project.project_id
+    return 0
+
+def res():
+    print("Resetting table...")
+    BOM.cols[0:99].set_width(100)
+    BOM.rows[0:40].set_height(20)
+    for y in range(0,40):
+        for x in range(1,99):
+            BOM[x,y].clear()
+    print("Done!")
+    return 0
 
 # Project class to represent a project with items
 class Project:
@@ -56,18 +70,27 @@ class Project:
     def printTable(self):
         seqListList = []
         item_list = []
+        checks = 5
+        # Write out the data
         for item in project.items:
             seq_list = []
             for seq in item.sequences:
                 seq_list.append(seq.sequence_id)
             seqListList.append(seq_list)
             item_list.append(item.item_id)
+        # Format the table
         n = 0
         for item in item_list:
-            nt.sheets["BOMs"][2,n*3] = item
-            nt.sheets["BOMs"][3,n*3] = seqListList[n]
+            col = n*checks
+            BOM[2,col] = item
+            BOM[3,col] = seqListList[n]
+            BOM.cols[(col+1):(col+checks)].set_width(20)
+            for seqList in seqListList[n]:
+                for seq in seqList:
+                    #seq.pos = [3 + seqList.index(seq), col]
+                    BOM[3 + seqList.index(seq), col + 1] = '\u2022'
             n += 1
-        return [self.project_name, self.project_id], item_list
+        return self.project_name
 
 # Item class to represent an item within a project
 class Item:
@@ -81,7 +104,7 @@ class Item:
     
     # Method to add sequences to the item
     def addSequences(self):
-        print("Adding sequences for:", self.item_id)
+        #print("Adding sequences for:", self.item_id)
         # Determine start and end rows for searching sequences
         if(self.index == len(project.items) - 1):
             rowStart = self.row
@@ -108,6 +131,8 @@ class Sequence:
     def __init__(self, sequence_id, item_id):
         self.sequence_id = sequence_id
         self.item_id = item_id
+        self.state = "404"
+        self.pos = [] # Position of cell in table
         self.parts = []  # List to hold associated parts
 
     def addParts():
